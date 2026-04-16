@@ -2,29 +2,27 @@
   margin-bottom: 8px;
 }
 
-.query-form {
-  width: 100%;
-}
+.query-form { width: 100%; }
 
 .input-container {
   display: flex;
   align-items: center;
-  background: var(--bg-card);
-  border: 2px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 6px 6px 6px 20px;
-  transition: all 0.3s;
+  padding: 4px 4px 4px 16px;
+  transition: border-color 0.15s;
 }
 
 .input-container:focus-within {
   border-color: var(--accent-blue);
-  box-shadow: var(--shadow-glow-blue);
 }
 
 .input-icon {
-  font-size: 1.2rem;
-  margin-right: 12px;
+  font-size: 1rem;
+  margin-right: 10px;
   flex-shrink: 0;
+  color: var(--text-muted);
 }
 
 .input-container input {
@@ -34,8 +32,8 @@
   outline: none;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 1rem;
-  padding: 14px 12px;
+  font-size: 0.875rem;
+  padding: 12px 8px;
 }
 
 .input-container input::placeholder {
@@ -44,20 +42,21 @@
 
 .submit-btn {
   flex-shrink: 0;
-  padding: 12px 24px !important;
+  padding: 10px 20px !important;
   border-radius: var(--radius-md) !important;
+  font-size: 0.8rem !important;
 }
 
 .example-queries {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 10px;
   flex-wrap: wrap;
 }
 
 .examples-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -65,20 +64,19 @@
 .example-btn {
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 
 .example-btn:hover {
-  background: var(--bg-card);
   color: var(--text-primary);
-  border-color: var(--accent-blue);
+  border-color: #374151;
 }
 
 .example-btn:disabled {

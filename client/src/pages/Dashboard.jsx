@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Loader2, LogOut, Globe } from 'lucide-react';
 import { predictDelayAsync, pollJobStatus, getHistory } from '../services/api';
 import QueryInput from '../components/QueryInput';
 import RiskGauge from '../components/RiskGauge';
@@ -7,26 +8,21 @@ import ShapChart from '../components/ShapChart';
 import WeatherCard from '../components/WeatherCard';
 import NewsPanel from '../components/NewsPanel';
 import MitigationCards from '../components/MitigationCards';
-import PredictionHistory from '../components/PredictionHistory';
 import FinancialImpact from '../components/FinancialImpact';
 import RiskMap from '../components/RiskMap';
-import './Dashboard.css';
+import ModeOptimizer from '../components/ModeOptimizer';
 
 export default function Dashboard() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
-  const [history, setHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('analysis');
   const navigate = useNavigate();
   const pollRef = useRef(null);
 
-  // Cleanup polling on unmount
   useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
   const handleLogout = async () => {
@@ -37,29 +33,13 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  const loadHistory = async () => {
-    try {
-      const data = await getHistory(10);
-      setHistory(data);
-    } catch (err) {
-      if (err.message === 'Unauthorized') navigate('/login');
-    }
-  };
-
-  useEffect(() => {
-    loadHistory();
-  }, []);
-
   const handlePredict = async (query) => {
     setLoading(true);
     setProgress(0);
     setError(null);
     setResult(null);
     try {
-      // 1. Submit job queue
       const { jobId } = await predictDelayAsync(query);
-      
-      // 2. Poll status every 1.5s
       pollRef.current = setInterval(async () => {
         try {
           const statusRes = await pollJobStatus(jobId);
@@ -69,7 +49,6 @@ export default function Dashboard() {
             setResult(statusRes.result);
             setActiveTab('analysis');
             setLoading(false);
-            loadHistory();
           } else if (statusRes.status === 'failed') {
             clearInterval(pollRef.current);
             pollRef.current = null;
@@ -78,186 +57,181 @@ export default function Dashboard() {
           } else {
             setProgress(statusRes.progress || 10);
           }
-        } catch (err) {
+        } catch (pollErr) {
           clearInterval(pollRef.current);
           pollRef.current = null;
-          setError('Lost connection to server while polling.');
+          setError('Lost connection while waiting for results.');
           setLoading(false);
         }
       }, 1500);
-
     } catch (err) {
       setError(err.message || 'Failed to submit prediction job.');
       setLoading(false);
     }
   };
 
+  const progressLabel = () => {
+    if (progress < 20) return 'Parsing query...';
+    if (progress < 50) return 'Fetching signal data...';
+    if (progress < 75) return 'Analysing risk vectors...';
+    return 'Finalizing intelligence...';
+  };
+
+  const tabs = [
+    { key: 'analysis', label: 'AI Assessment' },
+    { key: 'optim', label: 'Route Optimizer' },
+    { key: 'factors', label: 'ML Factors' },
+    { key: 'mitigations', label: 'Action Plan' },
+    { key: 'news', label: 'Live Events' },
+  ];
+
   return (
-    <div className="dashboard">
+    <div className="min-h-screen bg-[#020617] font-sans text-slate-100 selection:bg-teal-500/30">
+      
       {/* Navbar */}
-      <nav className="navbar">
-        <div className="navbar-inner" style={{ justifyContent: 'center', position: 'relative' }}>
-          <div className="header-brand" style={{ textAlign: 'center' }}>
-            <h1 style={{ letterSpacing: '4px', fontSize: '1.2rem', margin: 0, color: '#e0e0e0' }}>FREIGHTMIND</h1>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>Risk intelligence before the market knows.</p>
-          </div>
-          <div className="navbar-links" style={{ position: 'absolute', right: 20 }}>
-            <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '6px 16px', fontSize: '0.8rem', background: 'transparent', border: '1px solid #333', color: '#888' }}>SIGN OUT</button>
+      <nav className="sticky top-0 z-40 border-b border-white/5 bg-[#020617]/70 px-6 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold tracking-tighter">
+            <span className="bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">Freight Mind</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <div className="hidden h-8 w-[1px] bg-white/10 sm:block"></div>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-5 py-2 text-sm font-bold text-slate-300 transition hover:bg-white/10 hover:text-white"
+            >
+              Sign out <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Loading overlay */}
+      {/* Loading Overlay */}
       {loading && (
-        <div className="loading-overlay">
-          <div className="spinner"></div>
-          <div className="loading-text">Analyzing shipment risk... {progress}%</div>
-          <div className="loading-steps" style={{ marginTop: 20, textAlign: 'center' }}>
-            {progress < 20 && <span>🤖 Parsing query + Enqueueing...</span>}
-            {progress >= 20 && progress < 50 && <span>🌦️ Fetching signals (Weather/News)...</span>}
-            {progress >= 50 && progress < 75 && <span>📊 Running ML models in background...</span>}
-            {progress >= 75 && <span>🛡️ Generating LLM mitigations...</span>}
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#020617]/90 backdrop-blur-xl">
+          <div className="relative h-24 w-24">
+            <div className="absolute inset-0 rounded-full border-b-2 border-teal-500 animate-spin"></div>
+            <div className="absolute inset-4 rounded-full border-t-2 border-emerald-500 animate-spin-slow"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+               <Loader2 className="h-8 w-8 animate-pulse text-teal-400" />
+            </div>
           </div>
-          <div style={{ width: '200px', height: '4px', background: 'var(--bg-secondary)', borderRadius: '2px', overflow: 'hidden', marginTop: 10 }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent-blue)', transition: 'width 0.5s' }} />
+          <div className="mt-8 text-lg font-bold tracking-tight text-white">{progressLabel()}</div>
+          <div className="mt-4 h-[2px] w-64 overflow-hidden rounded-full bg-white/5">
+            <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-700 ease-out shadow-[0_0_10px_rgba(20,184,166,0.6)]" style={{ width: `${progress}%` }} />
           </div>
+          <span className="mt-3 font-mono text-xs tracking-widest text-slate-500">{progress}%</span>
         </div>
       )}
 
-      <div className="dashboard-content container">
-        {/* Query Section */}
-        <section className="query-section" style={{ display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+      {/* Main Content */}
+      <div className="mx-auto max-w-[1440px] px-6 pb-24 pt-12">
+        
+        {/* Search Bar */}
+        <section className="mx-auto max-w-4xl mb-16">
           <QueryInput onSubmit={handlePredict} loading={loading} />
           {error && (
-            <div className="error-banner">
-              <span>⚠️</span> {error}
+            <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-center text-sm font-bold text-red-400 backdrop-blur-md">
+              <span className="mr-2">⚠️</span> {error}
             </div>
           )}
         </section>
 
-        {/* Results */}
-        {result && (
-          <div className="results-area animate-fade-in-up">
-            {/* Top row: Risk Score + Weather */}
-            <div className="results-top">
-              <div className="card risk-card">
-                <RiskGauge
-                  score={result.riskScore}
-                  delayDays={result.predictedDelayDays}
-                  category={result.delayCategory}
-                />
+        {/* Results Area */}
+        {result ? (
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both">
+            
+            {/* Top Insight Grid */}
+            <div className="mb-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <div className="glass-card rounded-3xl p-8 transition-transform hover:scale-[1.02]">
+                <RiskGauge score={result.riskScore} delayDays={result.predictedDelayDays} category={result.delayCategory} />
               </div>
-              <div className="card financial-wrapper" style={{ padding: 0, border: 'none', background: 'transparent' }}>
-                <FinancialImpact 
-                  usd={result.financialImpactUsd} 
-                  breakdown={result.financialBreakdown} 
-                />
+              <div className="glass-card rounded-3xl p-8 transition-transform hover:scale-[1.02]">
+                <FinancialImpact usd={result.financialImpactUsd} breakdown={result.financialBreakdown} />
               </div>
-              <div className="card weather-wrapper">
+              <div className="glass-card rounded-3xl p-8 transition-transform hover:scale-[1.02]">
                 <WeatherCard weather={result.weatherData} />
               </div>
-              <div className="card parsed-query-card">
-                <h3 style={{ color: '#c4fb6d', fontSize: '0.9rem', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 15 }}>📋 Parsed Query</h3>
-                <div className="parsed-items">
-                  <div className="parsed-item">
-                    <span className="parsed-label">Port</span>
-                    <span className="parsed-value">{result.parsedQuery?.port || 'N/A'}</span>
-                  </div>
-                  <div className="parsed-item">
-                    <span className="parsed-label">ETA</span>
-                    <span className="parsed-value">{result.parsedQuery?.eta_days || 'N/A'} days</span>
-                  </div>
-                  <div className="parsed-item">
-                    <span className="parsed-label">Shipping</span>
-                    <span className="parsed-value">{result.parsedQuery?.shipping_mode || 'Standard'}</span>
-                  </div>
-                  <div className="parsed-item">
-                    <span className="parsed-label">Region</span>
-                    <span className="parsed-value">{result.parsedQuery?.region || 'N/A'}</span>
-                  </div>
+              
+              <div className="flex flex-col glass-card rounded-3xl p-8 transition-transform hover:scale-[1.02]">
+                <h4 className="mb-6 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">Contextual Signals</h4>
+                <div className="flex flex-col gap-4">
+                  {[
+                    ['Origin Hub', result.parsedQuery?.origin],
+                    ['Destination', result.parsedQuery?.destination],
+                    ['Service ETA', result.parsedQuery?.eta_days ? `${result.parsedQuery.eta_days} days` : null],
+                    ['Ship Mode', result.parsedQuery?.shipping_mode],
+                    ['Target Market', result.parsedQuery?.market],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-slate-500">{label}</span>
+                      <span className="font-bold text-slate-200">{value || '—'}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Geographical Map Row */}
-            <div className="map-row" style={{ marginTop: '20px', marginBottom: '20px' }}>
+            {/* Geospatial Section */}
+            <div className="mb-10 overflow-hidden rounded-[2.5rem] border border-white/5 bg-slate-900 shadow-3xl">
               <RiskMap 
-                destinationPort={result.parsedQuery?.port} 
-                destinationCoords={result.weatherData ? [result.weatherData.lat, result.weatherData.lon] : null}
+                originName={result.parsedQuery?.origin}
+                originCoords={result.originCoords ? [result.originCoords.lat, result.originCoords.lon] : null}
+                destinationName={result.parsedQuery?.destination} 
+                destinationCoords={result.destCoords ? [result.destCoords.lat, result.destCoords.lon] : null}
                 riskScore={result.riskScore}
                 weather={result.weatherData}
                 alternativeRoutes={result.alternativeRoutes}
               />
             </div>
 
-            {/* Tabs */}
-            <div className="tabs">
-              <button
-                className={`tab ${activeTab === 'analysis' ? 'active' : ''}`}
-                onClick={() => setActiveTab('analysis')}
-              >
-                🔍 AI Analysis
-              </button>
-              <button
-                className={`tab ${activeTab === 'factors' ? 'active' : ''}`}
-                onClick={() => setActiveTab('factors')}
-              >
-                📊 Risk Factors
-              </button>
-              <button
-                className={`tab ${activeTab === 'mitigations' ? 'active' : ''}`}
-                onClick={() => setActiveTab('mitigations')}
-              >
-                🛡️ Mitigations
-              </button>
-              <button
-                className={`tab ${activeTab === 'news' ? 'active' : ''}`}
-                onClick={() => setActiveTab('news')}
-              >
-                📰 News
-              </button>
+            {/* Intel Tabs */}
+            <div className="mb-8 flex gap-4 border-b border-white/5 overflow-x-auto pb-[-2px] no-scrollbar">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`relative whitespace-nowrap px-6 py-4 text-sm font-bold tracking-tight transition-all ${
+                    activeTab === t.key 
+                    ? 'text-teal-400' 
+                    : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  {t.label}
+                  {activeTab === t.key && (
+                    <div className="absolute bottom-0 left-0 h-1 w-full rounded-t-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-[0_0_15px_rgba(20,184,166,0.8)]" />
+                  )}
+                </button>
+              ))}
             </div>
 
-            {/* Tab content */}
-            <div className="tab-content animate-fade-in">
+            <div className="min-h-[400px]">
               {activeTab === 'analysis' && (
-                <div className="card analysis-card">
-                  <h3 style={{ color: '#c4fb6d', fontSize: '0.9rem', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 15 }}>🧠 AI Risk Assessment</h3>
-                  <p className="analysis-text">{result.llmAnalysis}</p>
-
+                <div className="glass-card rounded-[2rem] p-10 animate-in fade-in slide-in-from-left-4 duration-500">
+                  <h4 className="mb-6 text-[10px] font-black tracking-[0.2em] text-teal-500 uppercase">AI Assessment</h4>
+                  <p className="text-lg font-medium leading-relaxed text-slate-300">{result.llmAnalysis}</p>
                 </div>
               )}
-
-              {activeTab === 'factors' && (
-                <ShapChart factors={result.topRiskFactors} shapValues={result.shapValues} />
-              )}
-
-              {activeTab === 'mitigations' && (
-                <MitigationCards mitigations={result.mitigations} />
-              )}
-
-              {activeTab === 'news' && (
-                <NewsPanel news={result.newsData} />
-              )}
+              {activeTab === 'optim' && <ModeOptimizer modes={result.mode_comparison} />}
+              {activeTab === 'factors' && <ShapChart factors={result.topRiskFactors} shapValues={result.shapValues} />}
+              {activeTab === 'mitigations' && <MitigationCards mitigations={result.mitigations} />}
+              {activeTab === 'news' && <NewsPanel news={result.newsData} />}
             </div>
+
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="flex flex-col items-center justify-center rounded-[3rem] border-2 border-dashed border-white/5 py-32 px-10 text-center animate-in fade-in duration-1000">
+            <div className="mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-teal-500/5 ring-1 ring-teal-500/20">
+               <Globe className="h-10 w-10 text-teal-400/50" />
+            </div>
+            <h2 className="mb-3 text-3xl font-black tracking-tight text-white">Operational Readiness</h2>
+            <p className="max-w-md text-slate-500 font-medium">
+              Submit a shipment query to initiate real-time AI risk assessment, delay forecasting, and multi-modal route optimization.
+            </p>
           </div>
         )}
 
-        {/* Empty state */}
-        {!result && !loading && (
-          <div className="empty-state">
-            <div className="empty-icon">🚢</div>
-            <h2>Enter a shipment query to get started</h2>
-            <p>Describe your shipment in natural language and our AI agent will analyze the risk</p>
-          </div>
-        )}
-
-        {/* History */}
-        {history.length > 0 && (
-          <section className="history-section">
-            <PredictionHistory history={history} onSelect={setResult} />
-          </section>
-        )}
       </div>
     </div>
   );

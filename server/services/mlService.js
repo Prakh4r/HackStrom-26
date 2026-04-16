@@ -44,37 +44,63 @@ async function checkHealth() {
  * Mock prediction when ML service is unavailable
  */
 function getMockPrediction(features) {
-  // Generate plausible predictions based on input features
-  const scheduled = features.scheduled_days || 4;
-  const windRisk = (features.weather_wind || 10) > 20 ? 1.5 : 0;
-  const baseDelay = (Math.random() * 2 - 0.5) + windRisk;
+  // Generate plausible predictions based on input features with high variance for demo
+  const dest = (features.destination || '').toLowerCase();
+  const cargo = (features.cargo_type || '').toLowerCase();
+  
+  let baseRisk = 25; // Base low risk
 
-  const riskScore = Math.min(100, Math.max(0,
-    30 + (baseDelay * 15) + (windRisk * 10) + Math.random() * 10
-  ));
+  // ── DEMO TRIGGERS ──
+  // Port-specific risk (Simulating real-world congestion)
+  if (dest.includes('rotterdam') || dest.includes('hamburg')) baseRisk += 25; // Moderate range
+  if (dest.includes('hong kong') || dest.includes('shanghai')) baseRisk += 45; // High range
+  if (dest.includes('los angeles')) baseRisk += 15;
+
+  // Signal-specific risk
+  if (features.news_sentiment === 'negative') baseRisk += 20;
+  if ((features.weather_wind || 0) > 30) baseRisk += 25;
+  if (features.shipping_mode === 'Same Day') baseRisk += 15; // Higher pressure
+  
+  // Cargo-specific risk
+  if (cargo.includes('pharmaceutical') || cargo.includes('electronics')) baseRisk += 10;
+
+  // Final Score with some jitter
+  const riskScore = Math.min(98.5, Math.max(8.2, baseRisk + (Math.random() * 15 - 5)));
+  
+  // Calculate predicted delay based on risk score
+  // 0-30: 0-1 days, 30-60: 1-3 days, 60-100: 3-7 days
+  let predictedDelay;
+  if (riskScore < 35) {
+    predictedDelay = Math.random() * 0.8;
+  } else if (riskScore < 65) {
+    predictedDelay = 1 + Math.random() * 2;
+  } else {
+    predictedDelay = 3.5 + Math.random() * 4;
+  }
+
+  const delayCategory = predictedDelay <= 0.5 ? 'On Time' : 
+                        predictedDelay <= 1.5 ? 'Minor Delay' : 
+                        predictedDelay <= 4 ? 'Moderate Delay' : 'Severe Delay';
 
   return {
     risk_score: Math.round(riskScore * 10) / 10,
-    predicted_delay_days: Math.round(baseDelay * 100) / 100,
-    delay_category: baseDelay <= 0 ? 'On Time' : baseDelay <= 1 ? 'Minor Delay' : baseDelay <= 3 ? 'Moderate Delay' : 'Severe Delay',
-    rf_prediction: Math.round((baseDelay + Math.random() * 0.3) * 100) / 100,
-    xgb_prediction: Math.round((baseDelay - Math.random() * 0.3) * 100) / 100,
+    predicted_delay_days: Math.round(predictedDelay * 100) / 100,
+    delay_category: delayCategory,
+    rf_prediction: Math.round((predictedDelay + 0.1) * 100) / 100,
+    xgb_prediction: Math.round((predictedDelay - 0.1) * 100) / 100,
     shap_values: {
-      'Shipping Mode': 0.35,
-      'Days for shipment (scheduled)': -0.28,
+      'Shipping Mode': riskScore > 50 ? 0.42 : 0.15,
+      'Days for shipment (scheduled)': riskScore > 50 ? 0.38 : -0.22,
       'Order Region': 0.22,
-      'Order Item Total': -0.18,
-      'Market': 0.15,
-      'Product Price': -0.12,
-      'Latitude': 0.10,
-      'Longitude': 0.08,
+      'Weather Wind': (features.weather_wind || 0) > 20 ? 0.35 : 0.05,
+      'News Sentiment': features.news_sentiment === 'negative' ? 0.45 : 0.02,
     },
     top_risk_factors: [
-      { feature: 'Shipping Mode', impact: 0.35, direction: 'increases risk', importance: 0.35 },
-      { feature: 'Days for shipment (scheduled)', impact: -0.28, direction: 'decreases risk', importance: 0.28 },
-      { feature: 'Order Region', impact: 0.22, direction: 'increases risk', importance: 0.22 },
-      { feature: 'Order Item Total', impact: -0.18, direction: 'decreases risk', importance: 0.18 },
-      { feature: 'Market', impact: 0.15, direction: 'increases risk', importance: 0.15 },
+      { feature: 'Shipping Mode', impact: riskScore > 50 ? 0.42 : 0.15, direction: 'increases risk' },
+      { feature: 'Weather/Wind', impact: (features.weather_wind || 0) > 20 ? 0.35 : 0.05, direction: 'increases risk' },
+      { feature: 'News Sentiment', impact: features.news_sentiment === 'negative' ? 0.45 : 0.02, direction: 'increases risk' },
+      { feature: 'Order Region', impact: 0.22, direction: 'increases risk' },
+      { feature: 'Market Demand', impact: 0.18, direction: 'increases risk' },
     ],
     model_metrics: {
       rf: { mae: 0.15, mse: 0.05, r2: 0.98 },

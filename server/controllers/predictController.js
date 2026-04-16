@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const { addPredictionJob, predictionQueue } = require('../services/queueService');
 
 exports.submitPrediction = async (req, res) => {
-  const { query } = req.body;
+  const { query, overrides = {} } = req.body;
   const traceId = crypto.randomUUID(); 
   
   if (!query) {
@@ -11,8 +11,8 @@ exports.submitPrediction = async (req, res) => {
   }
 
   try {
-    logger.info(`[${traceId}] Received prediction request -> queueing job.`);
-    const jobId = await addPredictionJob({ query, traceId });
+    logger.info(`[${traceId}] Received prediction request -> queueing job with overrides: ${JSON.stringify(overrides)}`);
+    const jobId = await addPredictionJob({ query, traceId, overrides });
     
     res.json({ 
       message: 'Job submitted successfully', 

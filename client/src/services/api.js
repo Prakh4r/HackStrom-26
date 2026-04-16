@@ -19,7 +19,11 @@ export async function predictDelayAsync(query) {
         headers,
         body: JSON.stringify({ query }),
     });
-    if (response.status === 401) throw new Error('Unauthorized');
+    if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        throw new Error('Session expired. Please log in again.');
+    }
     if (!response.ok) throw new Error(`Prediction failed: ${response.statusText}`);
     return response.json(); // Returns { jobId, statusUrl }
 }
@@ -39,7 +43,11 @@ export async function getHistory(limit = 20) {
         const response = await fetch(`${API_BASE}/history?limit=${limit}`, {
             headers
         });
-        if (response.status === 401) throw new Error('Unauthorized');
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('accessToken');
+            window.location.href = '/login';
+            throw new Error('Session expired.');
+        }
         if (!response.ok) return [];
         return response.json();
     } catch {

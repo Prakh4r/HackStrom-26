@@ -95,6 +95,7 @@ function getMockWeather(location) {
  * Get port coordinates for ML model
  */
 function getPortCoordinates(location) {
+  if (!location) return null;
   const locLower = location.toLowerCase().trim();
   const portInfo = PORT_COORDS[locLower];
   if (portInfo) {

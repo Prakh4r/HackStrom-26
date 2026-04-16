@@ -4,7 +4,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const MODEL = 'gpt-4o-mini';
+const MODEL = 'gpt-4o';
 
 /**
  * Parse a natural language shipment query into structured data
@@ -21,12 +21,13 @@ async function parseShipmentQuery(query) {
           content: `You are a logistics query parser. Extract shipment details from user queries.
 Return ONLY valid JSON (no explanation, no markdown) with these fields:
 {
-  "port": "destination port/city name",
+  "origin": "origin port/city name",
+  "destination": "destination port/city name",
   "eta_days": number of days until arrival (integer),
   "cargo_type": "type of cargo if mentioned, default 'general'",
   "shipping_mode": "one of: Standard Class, First Class, Second Class, Same Day. Default: Standard Class",
-  "region": "geographic region like: Western Europe, Southeast Asia, South Asia, East of USA, etc. Infer from port.",
-  "market": "one of: Europe, Pacific Asia, USCA, Latin America, Africa. Infer from port."
+  "region": "geographic region of DESTINATION. Infer from destination.",
+  "market": "one of: Europe, Pacific Asia, USCA, Latin America, Africa. Infer from destination."
 }
 If a field cannot be determined, use the defaults shown above.`
         },
@@ -84,9 +85,35 @@ You must return ONLY valid JSON in this exact format:
     "holding_cost": integer_amount,
     "penalty_fees": integer_amount
   },
+  "mode_comparison": [
+    {
+      "mode": "Air",
+      "risk_rating": 1-10,
+      "estimated_eta": "days",
+      "cost_tier": "High",
+      "is_recommended": boolean,
+      "reasoning": "short justification"
+    },
+    {
+      "mode": "Sea",
+      "risk_rating": 1-10,
+      "estimated_eta": "days",
+      "cost_tier": "Low",
+      "is_recommended": boolean,
+      "reasoning": "short justification"
+    },
+    {
+      "mode": "Rail/Road",
+      "risk_rating": 1-10,
+      "estimated_eta": "days",
+      "cost_tier": "Medium",
+      "is_recommended": boolean,
+      "reasoning": "short justification"
+    }
+  ],
   "alternative_routes": [
     {
-      "path": "OriginalPort -> AlternateHub -> Destination",
+      "path": "Original -> AlternateHub -> Destination",
       "mode": "air|sea|road|rail",
       "reason": "1 sentence explaining why this route avoids the detected stressor"
     }
@@ -101,12 +128,10 @@ You must return ONLY valid JSON in this exact format:
   ]
 }
 
-CALCULATING FINANCIAL IMPACT:
-- Estimate daily holding costs and penalty fees based on cargo type and standard industry metrics.
-- High delay + expensive cargo = High Financial Impact.
-
-ALTERNATIVE ROUTES:
-- Suggest 1-2 alternative paths or mode-switches (e.g. Sea to Air) based on realistic global geography if weather or news indicate severe blockages.`
+CALCULATION RULES:
+1. FINANCIAL IMPACT: Estimate based on cargo type and predicted delay days.
+2. MODE COMPARISON: Evaluate all 3 modes. If user query implies 'Urgent' or 'Express', prioritize speed (Air). If news shows Port/Sea strikes, prioritize Air or Rail. 
+3. CHAMPION SELECTION: Set 'is_recommended' to true for the mode that best balances the current Risk/Urgency trade-off.`
         },
         {
           role: 'user',
@@ -173,12 +198,13 @@ function getDefaultParsedQuery(query) {
   }
 
   return {
-    port,
+    origin: 'Singapore', // Balanced default hub
+    destination: 'Rotterdam',
     eta_days,
     cargo_type: 'general',
     shipping_mode: 'Standard Class',
-    region: 'West Asia',
-    market: 'Pacific Asia',
+    region: 'Western Europe',
+    market: 'Europe',
   };
 }
 
@@ -237,6 +263,36 @@ function getDefaultAssessment(prediction, weather = {}) {
         path: "Standard Route implies risk, recommend switching destination port",
         mode: "air",
         reason: "Default recommendation due to high risk score"
+      }
+    ],
+    mode_comparison: [
+      {
+        mode: "Sea",
+        risk_rating: prediction.risk_score > 60 ? 8 : 4,
+        estimated_eta: "5-7 days",
+        cost_tier: "Low",
+        is_recommended: prediction.risk_score <= 60,
+        reasoning: prediction.risk_score > 60
+          ? "High congestion risk at destination port makes sea freight unreliable."
+          : "Standard sea freight is cost-effective with acceptable risk levels."
+      },
+      {
+        mode: "Air",
+        risk_rating: 2,
+        estimated_eta: "1-2 days",
+        cost_tier: "High",
+        is_recommended: prediction.risk_score > 60,
+        reasoning: prediction.risk_score > 60
+          ? "Air freight bypasses port congestion entirely. Recommended for urgent cargo."
+          : "Air freight is available but cost-prohibitive for standard shipments."
+      },
+      {
+        mode: "Rail/Road",
+        risk_rating: prediction.risk_score > 60 ? 5 : 3,
+        estimated_eta: "3-5 days",
+        cost_tier: "Medium",
+        is_recommended: false,
+        reasoning: "Overland transport is a viable backup if both sea and air are constrained."
       }
     ],
     mitigations,

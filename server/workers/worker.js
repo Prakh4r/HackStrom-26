@@ -12,8 +12,8 @@ const { getPrediction } = require('../services/mlService');
 logger.info('🚀 Backend Worker started... Waiting for prediction jobs.');
 
 const predictionWorker = new Worker('DelayPredictions', async job => {
-  const { query, traceId } = job.data;
-  logger.info(`[${traceId}] Job Started: Processing query: "${query}"`);
+  const { query, traceId, overrides = {} } = job.data;
+  logger.info(`[${traceId}] Job Started: Processing query: "${query}" with overrides: ${JSON.stringify(overrides)}`);
 
   await job.updateProgress(10);
   
@@ -25,8 +25,46 @@ const predictionWorker = new Worker('DelayPredictions', async job => {
     let weather = null;
     let news = null;
     try {
-      weather = await getWeather(parsedQuery.port);
-      news = await getNews(parsedQuery.port || parsedQuery.region || 'logistics');
+      weather = await getWeather(parsedQuery.destination);
+      news = await getNews(parsedQuery.destination || parsedQuery.region || 'logistics');
+
+      // --- SIMULATOR OVERRIDES ---
+      if (overrides.forceWeather) {
+        logger.warn(`[${traceId}] SIMULATOR: Forcing Category 5 Hurricane`);
+        weather = {
+          ...weather,
+          temp: 28,
+          wind_speed: 145, // Hurricane force
+          description: 'SEVERE HURRICANE - CATEGORY 5',
+          icon: '11d'
+        };
+      }
+      
+      if (overrides.forceStrike) {
+        logger.warn(`[${traceId}] SIMULATOR: Forcing Massive Port Strike`);
+        news = [
+          {
+            title: "CRITICAL: Nationwide Port Union Strike Halts All Operations",
+            description: "No cargo moving in or out. Backlog estimated at 3 weeks.",
+            sentiment: "negative",
+            source: "Logistics Weekly"
+          },
+          ...(news || [])
+        ];
+      }
+
+      if (overrides.forceBlockade) {
+        logger.warn(`[${traceId}] SIMULATOR: Forcing Naval Blockade / Geopolitical Conflict`);
+        news = [
+          {
+            title: "ALERT: Geopolitical Conflict Leads to Naval Blockade of Region",
+            description: "Shipping lanes closed until further notice. Immediate reroute mandatory.",
+            sentiment: "negative",
+            source: "Global Conflict Watch"
+          },
+          ...(news || [])
+        ];
+      }
     } catch (err) {
       logger.warn(`[${traceId}] External API warning: ${err.message}`);
     }
@@ -39,6 +77,8 @@ const predictionWorker = new Worker('DelayPredictions', async job => {
       scheduled_days: parsedQuery.eta_days || 4,
       latitude: weather?.lat || 25.2048,
       longitude: weather?.lon || 55.2708,
+      origin: parsedQuery.origin || "Singapore",
+      destination: parsedQuery.destination || "Rotterdam",
       weather_temp: weather?.temp,
       weather_wind: weather?.wind_speed,
       weather_humidity: weather?.humidity,
@@ -61,9 +101,41 @@ const predictionWorker = new Worker('DelayPredictions', async job => {
     );
     await job.updateProgress(90);
 
+    const originCoords = getPortCoordinates(parsedQuery.origin);
+    const destCoords = getPortCoordinates(parsedQuery.destination);
+
+    // ── FORMULA-BASED FINANCIAL MODEL ──
+    // Industry standard rates, not LLM hallucinations
+    const cargoTypeMultipliers = {
+      'electronics': 25000, 'auto parts': 18000, 'pharmaceutical': 30000,
+      'perishable': 15000, 'textiles': 8000, 'machinery': 22000,
+      'chemicals': 20000, 'general': 12000, 'bulk': 6000, 'wheat': 5000
+    };
+    const cargoKey = Object.keys(cargoTypeMultipliers).find(
+      k => (parsedQuery.cargo_type || 'general').toLowerCase().includes(k)
+    ) || 'general';
+    const estimatedCargoValue = cargoTypeMultipliers[cargoKey];
+
+    const delayDays = Math.max(0, mlResponse.predicted_delay_days);
+    const riskMultiplier = mlResponse.risk_score / 100;
+
+    // Formula: transparent, auditable, defensible
+    const holdingCost = Math.round(delayDays * 850 * riskMultiplier); // $850/day warehouse rate × risk
+    const penaltyFees = delayDays > 1 ? Math.round(estimatedCargoValue * 0.03 * riskMultiplier) : 0; // 3% penalty if late
+    const revenueAtRisk = Math.round(estimatedCargoValue * riskMultiplier * 0.4); // 40% of cargo value weighted by risk
+    const totalFinancialImpact = holdingCost + penaltyFees + revenueAtRisk;
+
+    const financialBreakdown = {
+      revenue_at_risk: revenueAtRisk,
+      holding_cost: holdingCost,
+      penalty_fees: penaltyFees
+    };
+
     const finalResult = {
       query,
       parsedQuery,
+      originCoords,
+      destCoords,
       riskScore: mlResponse.risk_score,
       predictedDelayDays: mlResponse.predicted_delay_days,
       delayCategory: mlResponse.delay_category,
@@ -72,8 +144,9 @@ const predictionWorker = new Worker('DelayPredictions', async job => {
       newsData: news,
       mitigations: assessment.mitigations,
       alternativeRoutes: assessment.alternative_routes,
-      financialImpactUsd: assessment.financial_impact_usd,
-      financialBreakdown: assessment.financial_breakdown,
+      financialImpactUsd: totalFinancialImpact,
+      financialBreakdown: financialBreakdown,
+      mode_comparison: assessment.mode_comparison || [],
       llmAnalysis: assessment.analysis,
       modelMetrics: mlResponse.model_metrics,
       jobId: job.id

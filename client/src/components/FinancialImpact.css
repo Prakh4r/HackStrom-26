@@ -1,76 +1,56 @@
 .financial-impact-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
   border-radius: var(--radius-lg);
-  padding: 24px;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.financial-impact-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
   height: 100%;
-  background: radial-gradient(circle at top right, rgba(255, 76, 76, 0.05), transparent 70%);
-  z-index: 0;
 }
 
 .financial-heading {
-  color: var(--accent-red);
-  font-size: 0.95rem;
-  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  margin-bottom: 15px;
-  z-index: 1;
-  position: relative;
+  margin-bottom: 12px;
 }
 
 .financial-total {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  color: #fff;
-  z-index: 1;
-  position: relative;
+  color: var(--text-primary);
+  margin-bottom: 16px;
 }
 
 .financial-total .currency {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: var(--text-muted);
 }
 
 .financial-total .amount {
-  font-size: 3rem;
-  font-weight: 800;
-  letter-spacing: -1px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .financial-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  margin: 5px 0 20px 0;
-  z-index: 1;
-  position: relative;
+  display: none; /* Removed for cleaner look */
 }
 
 .financial-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   border-top: 1px solid var(--border-subtle);
   padding-top: 16px;
-  z-index: 1;
-  position: relative;
 }
 
 .breakdown-item {
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  align-items: center;
+  font-size: 0.8rem;
 }
 
 .breakdown-label {
@@ -78,6 +58,7 @@
 }
 
 .breakdown-value {
-  color: #fff;
-  font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-family: var(--font-mono, monospace);
 }

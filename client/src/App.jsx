@@ -45,8 +45,8 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0f0f0f', color: '#666' }}>
-        <div className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
+      <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-400">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-800 border-t-teal-500" />
       </div>
     );
   }

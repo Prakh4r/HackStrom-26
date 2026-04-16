@@ -1,14 +1,13 @@
-import { useEffect, useRef } from 'react';
-import './RiskGauge.css';
+import { useRef } from 'react';
 
 export default function RiskGauge({ score, delayDays, category }) {
   const gaugeRef = useRef(null);
 
   const getColor = (s) => {
-    if (s <= 30) return '#10b981';
-    if (s <= 60) return '#f59e0b';
-    if (s <= 80) return '#f97316';
-    return '#ef4444';
+    if (s <= 30) return '#2dd4bf'; // teal-400 (Vibrant)
+    if (s <= 60) return '#fbbf24'; // amber-400
+    if (s <= 80) return '#fb923c'; // orange-400
+    return '#f87171'; // red-400
   };
 
   const getLabel = (s) => {
@@ -23,55 +22,68 @@ export default function RiskGauge({ score, delayDays, category }) {
   const dashOffset = circumference - (score / 100) * circumference * 0.75;
 
   return (
-    <div className="risk-gauge" ref={gaugeRef}>
-      <svg viewBox="0 0 180 160" className="gauge-svg">
-        {/* Background arc */}
-        <circle
-          cx="90"
-          cy="90"
-          r="70"
-          fill="none"
-          stroke="rgba(148, 163, 200, 0.1)"
-          strokeWidth="12"
-          strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-          strokeDashoffset={0}
-          strokeLinecap="round"
-          transform="rotate(135 90 90)"
-        />
-        {/* Value arc */}
-        <circle
-          cx="90"
-          cy="90"
-          r="70"
-          fill="none"
-          stroke={color}
-          strokeWidth="12"
-          strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-          strokeDashoffset={dashOffset}
-          strokeLinecap="round"
-          transform="rotate(135 90 90)"
-          className="gauge-arc"
-          style={{ filter: `drop-shadow(0 0 8px ${color}50)` }}
-        />
-        {/* Score text */}
-        <text x="90" y="78" textAnchor="middle" className="gauge-score" fill={color}>
-          {Math.round(score)}
-        </text>
-        <text x="90" y="98" textAnchor="middle" className="gauge-label" fill="currentColor">
-          {getLabel(score)}
-        </text>
-        <text x="90" y="118" textAnchor="middle" className="gauge-sublabel" fill="var(--text-muted)">
-          /100
-        </text>
-      </svg>
-      <div className="gauge-details">
-        <div className="gauge-detail">
-          <span className="detail-value" style={{ color }}>{delayDays > 0 ? '+' : ''}{delayDays}</span>
-          <span className="detail-label">days delay</span>
+    <div className="flex flex-col items-center justify-center w-full relative" ref={gaugeRef}>
+      <h4 className="absolute top-0 left-0 text-[10px] font-black tracking-[0.2em] text-slate-500 uppercase">Operational Risk</h4>
+      
+      <div className="relative mt-8">
+        <svg viewBox="0 0 180 160" className="w-full max-w-[200px] transition-all duration-1000 ease-out">
+          <defs>
+            <filter id="glow-gauge">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          
+          {/* Background arc */}
+          <circle
+            cx="90" cy="90" r="70"
+            fill="none"
+            stroke="#1e293b"
+            strokeWidth="10"
+            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
+            strokeDashoffset={0}
+            strokeLinecap="round"
+            transform="rotate(135 90 90)"
+          />
+          {/* Value arc */}
+          <circle
+            cx="90" cy="90" r="70"
+            fill="none"
+            stroke={color}
+            strokeWidth="10"
+            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+            transform="rotate(135 90 90)"
+            className="transition-all duration-1000 ease-in-out"
+            filter="url(#glow-gauge)"
+          />
+          {/* Score text */}
+          <text x="90" y="78" textAnchor="middle" className="text-5xl font-black font-sans tracking-tight" fill="white">
+            {Math.round(score)}
+          </text>
+          <text x="90" y="102" textAnchor="middle" className="text-[10px] font-black tracking-[0.2em] font-sans" fill={color}>
+            {getLabel(score)}
+          </text>
+          <text x="90" y="122" textAnchor="middle" className="text-[10px] font-bold font-sans" fill="#475569">
+            /100 Index
+          </text>
+        </svg>
+      </div>
+      
+      <div className="flex w-full justify-between items-center mt-6 border-t border-white/5 pt-6">
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-lg font-black tracking-tight" style={{ color: delayDays > 0 ? '#fb923c' : '#2dd4bf' }}>
+            {delayDays > 0 ? '+' : ''}{delayDays} Days
+          </span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Delay Delta</span>
         </div>
-        <div className="gauge-detail">
-          <span className="detail-value">{category}</span>
-          <span className="detail-label">status</span>
+        <div className="flex flex-col items-end gap-1 text-right">
+          <span className="text-lg font-black tracking-tight text-white capitalize">{category}</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fleet Status</span>
         </div>
       </div>
     </div>

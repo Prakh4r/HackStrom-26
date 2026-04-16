@@ -8,6 +8,8 @@ import WeatherCard from '../components/WeatherCard';
 import NewsPanel from '../components/NewsPanel';
 import MitigationCards from '../components/MitigationCards';
 import PredictionHistory from '../components/PredictionHistory';
+import FinancialImpact from '../components/FinancialImpact';
+import RiskMap from '../components/RiskMap';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -145,6 +147,12 @@ export default function Dashboard() {
                   category={result.delayCategory}
                 />
               </div>
+              <div className="card financial-wrapper" style={{ padding: 0, border: 'none', background: 'transparent' }}>
+                <FinancialImpact 
+                  usd={result.financialImpactUsd} 
+                  breakdown={result.financialBreakdown} 
+                />
+              </div>
               <div className="card weather-wrapper">
                 <WeatherCard weather={result.weatherData} />
               </div>
@@ -169,6 +177,17 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Geographical Map Row */}
+            <div className="map-row" style={{ marginTop: '20px', marginBottom: '20px' }}>
+              <RiskMap 
+                destinationPort={result.parsedQuery?.port} 
+                destinationCoords={result.weatherData ? [result.weatherData.lat, result.weatherData.lon] : null}
+                riskScore={result.riskScore}
+                weather={result.weatherData}
+                alternativeRoutes={result.alternativeRoutes}
+              />
             </div>
 
             {/* Tabs */}

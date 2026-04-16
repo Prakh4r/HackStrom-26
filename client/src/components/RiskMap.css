@@ -1,0 +1,82 @@
+.risk-map-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-heading {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+
+.map-wrapper {
+  flex: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Override leaflet popup styles for dark mode */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle);
+}
+
+.leaflet-popup-content strong {
+  color: var(--accent-blue);
+}
+
+.map-overlay-stats {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  background: rgba(10, 10, 10, 0.8);
+  backdrop-filter: blur(4px);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  z-index: 1000; /* Above Leaflet map pane */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.map-pulse-indicator.high {
+  background: var(--accent-red);
+  box-shadow: 0 0 10px var(--accent-red);
+  animation: pulse-red 1.5s infinite;
+}
+
+.map-pulse-indicator.medium {
+  background: #fbbc05;
+  box-shadow: 0 0 10px #fbbc05;
+}
+
+.map-pulse-indicator.low {
+  background: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green);
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(255, 76, 76, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 76, 76, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 76, 76, 0); }
+}

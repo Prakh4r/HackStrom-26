@@ -1,0 +1,58 @@
+.risk-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.gauge-svg {
+  width: 200px;
+  height: 175px;
+}
+
+.gauge-arc {
+  transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.gauge-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.8rem;
+  font-weight: 800;
+}
+
+.gauge-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.gauge-sublabel {
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+}
+
+.gauge-details {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.gauge-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.detail-value {
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

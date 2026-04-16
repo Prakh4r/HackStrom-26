@@ -1,0 +1,96 @@
+.shap-chart h3 {
+  margin-bottom: 4px;
+}
+
+.shap-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.shap-bars { display: flex; flex-direction: column; gap: 10px; }
+
+.shap-bar-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 60px;
+  gap: 12px;
+  align-items: center;
+}
+
+.shap-feature-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shap-bar-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 24px;
+}
+
+.shap-bar-center {
+  display: flex;
+  height: 100%;
+}
+
+.shap-bar-center:first-child {
+  justify-content: flex-end;
+}
+
+.shap-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+  min-width: 4px;
+}
+
+.shap-bar-positive {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.3), var(--accent-red));
+  border-radius: 0 4px 4px 0;
+}
+
+.shap-bar-negative {
+  background: linear-gradient(270deg, rgba(16, 185, 129, 0.3), var(--accent-green));
+  border-radius: 4px 0 0 4px;
+}
+
+.shap-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.shap-value.positive { color: var(--accent-red); }
+.shap-value.negative { color: var(--accent-green); }
+
+.shap-legend {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .shap-bar-row {
+    grid-template-columns: 100px 1fr 50px;
+  }
+}

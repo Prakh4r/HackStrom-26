@@ -70,13 +70,27 @@ async function generateRiskAssessment(prediction, weather, news, originalQuery) 
 
     const completion = await openai.chat.completions.create({
       model: MODEL,
+      response_format: { type: 'json_object' },
       messages: [
         {
           role: 'system',
-          content: `You are a supply chain risk intelligence analyst. Provide concise, actionable analysis.
-You must return ONLY valid JSON (no explanation, no markdown) in this exact format:
+          content: `You are a prescriptive supply chain AI digital twin. Provide concise, actionable analysis.
+You must return ONLY valid JSON in this exact format:
 {
-  "analysis": "2-3 paragraph analysis of the shipment risk, combining ML prediction with weather and news signals",
+  "analysis": "2-3 paragraph analysis of the shipment risk, combining ML prediction with weather, news, and cargo type",
+  "financial_impact_usd": integer_dollar_amount_at_risk,
+  "financial_breakdown": {
+    "revenue_at_risk": integer_amount,
+    "holding_cost": integer_amount,
+    "penalty_fees": integer_amount
+  },
+  "alternative_routes": [
+    {
+      "path": "OriginalPort -> AlternateHub -> Destination",
+      "mode": "air|sea|road|rail",
+      "reason": "1 sentence explaining why this route avoids the detected stressor"
+    }
+  ],
   "mitigations": [
     {
       "title": "short action title",
@@ -86,7 +100,13 @@ You must return ONLY valid JSON (no explanation, no markdown) in this exact form
     }
   ]
 }
-Provide 4-6 mitigation recommendations. Be specific and practical.`
+
+CALCULATING FINANCIAL IMPACT:
+- Estimate daily holding costs and penalty fees based on cargo type and standard industry metrics.
+- High delay + expensive cargo = High Financial Impact.
+
+ALTERNATIVE ROUTES:
+- Suggest 1-2 alternative paths or mode-switches (e.g. Sea to Air) based on realistic global geography if weather or news indicate severe blockages.`
         },
         {
           role: 'user',
@@ -105,13 +125,12 @@ ${factorsContext}
 WEATHER AT DESTINATION (${weather.city}):
 - Temperature: ${weather.temp}°C
 - Wind Speed: ${weather.wind_speed} km/h
-- Humidity: ${weather.humidity}%
 - Conditions: ${weather.description}
 
-RECENT NEWS:
+RECENT NEWS / GEOPOLITICAL STRESSORS:
 ${newsContext}
 
-Provide risk analysis and mitigation strategies.`
+Return the structured prescriptive JSON.`
         }
       ],
       temperature: 0.4,
@@ -206,7 +225,20 @@ function getDefaultAssessment(prediction, weather = {}) {
   });
 
   return {
-    analysis: `Based on our AI analysis, this shipment has a risk score of ${prediction.risk_score}/100 with a predicted delay of ${prediction.predicted_delay_days} days (${prediction.delay_category}). Current weather conditions at the destination show ${weather.description} with winds at ${weather.wind_speed} km/h. ${weather.wind_speed > 20 ? 'High wind conditions may impact port operations.' : 'Weather conditions are within normal operating parameters.'}`,
+    analysis: `Based on our AI analysis, this shipment has a risk score of ${prediction.risk_score}/100 with a predicted delay of ${prediction.predicted_delay_days} days (${prediction.delay_category}). Current weather conditions at the destination show ${weather.description} with winds at ${weather.wind_speed} km/h.`,
+    financial_impact_usd: 12500,
+    financial_breakdown: {
+      revenue_at_risk: 8000,
+      holding_cost: 3000,
+      penalty_fees: 1500
+    },
+    alternative_routes: [
+      {
+        path: "Standard Route implies risk, recommend switching destination port",
+        mode: "air",
+        reason: "Default recommendation due to high risk score"
+      }
+    ],
     mitigations,
   };
 }

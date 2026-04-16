@@ -1,9 +1,7 @@
-const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const supabase = require('../services/supabaseService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_hackathon_key';
-
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   
   if (!token) {
@@ -12,12 +10,22 @@ const requireAuth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // { userId, role, ... }
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      logger.warn('Forbidden access attempt: Invalid token');
+      return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    }
+
+    req.user = { 
+      userId: user.id, 
+      email: user.email,
+      role: user.email?.includes('admin') ? 'admin' : 'user'
+    };
     next();
   } catch (err) {
-    logger.warn('Forbidden access attempt: Invalid token');
-    return res.status(403).json({ error: 'Forbidden: Invalid token' });
+    logger.error('Auth middleware error', err);
+    return res.status(500).json({ error: 'Internal server error during authentication' });
   }
 };
 
@@ -33,4 +41,4 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { requireAuth, requireAdmin, JWT_SECRET };
+module.exports = { requireAuth, requireAdmin };

@@ -27,7 +27,9 @@ export default function Dashboard() {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { supabase } = await import('../services/supabaseClient');
+    await supabase.auth.signOut();
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     navigate('/login');

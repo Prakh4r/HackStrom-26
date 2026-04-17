@@ -85,4 +85,46 @@ Ensure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/
 <img width="1253" height="809" alt="image" src="https://github.com/user-attachments/assets/554c3ba9-1c92-4b59-9db7-a97a2234132d" />
 
 
+### Live Demo & Presentation
+
+Explore **Freight Mind** through our working demo and detailed project presentation below:
+
+### 🔗 Live Demo
+Experience the predictive delay intelligence platform in action:
+
+👉 [View Live Demo](https://drive.google.com/file/d/1wWIFUntDpSpPqxPiJAipfGP6WkQq9yy9/view?usp=sharing)
+
+---
+
+### 📊 Project Presentation (PPT)
+Understand the architecture, workflow, and innovation behind Freight Mind:
+
+👉 [View Project Presentation](https://drive.google.com/file/d/1gxS1mAAt4PCtmK6bTfHLWFFtwPfK1NpV/view?usp=sharing)
+
+---
+
+### 🎯 What You Can See in the Demo
+
+The demo showcases:
+
+- AI-based shipment delay prediction
+- Explainable AI insights (SHAP feature reasoning)
+- Multi-modal transport recommendations (air / sea / road)
+- Risk heatmap visualization for congestion-aware routing
+- Geopolitical and weather-aware mitigation strategies
+- Secure authentication with MFA (OTP-based verification)
+- Event-driven architecture using Redis + BullMQ workers
+- Dockerized microservice deployment pipeline
+
+---
+
+### 🧪 Suggested Demo Flow for Reviewers
+
+1. Login using secure authentication
+2. Submit a shipment prediction request
+3. View delay probability and explanation factors
+4. Explore mitigation recommendations
+5. Open the congestion heatmap dashboard
+6. Observe alternative route suggestions
+
 🚀 Built by Team Hardcoders

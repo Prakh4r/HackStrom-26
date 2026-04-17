@@ -47,7 +47,7 @@ This framework successfully fulfills Hackathon Evaluation specifications (Mandat
 | **Database** | PostgreSQL (Supabase) |
 | **Security** | Supabase Auth (JWT), AES-256 (Node Crypto), MFA OTP Simulation |
 | **ML Service** | Python, FastAPI, XGBoost/RandomForest, SHAP Explainer |
-| **AI Agent Layer** | OpenAI API (gpt-4o-mini) |
+| **AI Agent Layer** | OpenAI API (gpt-4o) |
 | **Observability** | Winston, Grafana, Loki Stack |
 | **DevOps** | Docker, Docker Compose (Internal Network & Discoverability) |
 

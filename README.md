@@ -81,7 +81,7 @@ Ensure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/
 <img width="1666" height="933" alt="image" src="https://github.com/user-attachments/assets/dc3b3e61-8410-4fa6-86cb-db72ce72b250" />
 
 
-### 2. Secure MFA Authentication
+### 2. Google Identity Authentication
 <img width="1253" height="809" alt="image" src="https://github.com/user-attachments/assets/554c3ba9-1c92-4b59-9db7-a97a2234132d" />
 
 

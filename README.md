@@ -17,7 +17,8 @@ In the logistics and freight industry, unseen delays (caused by port congestion,
 
 **Freight Mind** uses a scalable, distributed pattern to ensure heavy ML inference and LLM token generation don't block the backend application.
 
-![Architecture Flow Placeholder](#)
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/42f4b751-7bee-4d2f-8f9d-55be6906daa9" />
+
 
 ### System Flow Diagram
 1. **User Input**: A user inputs a natural language query in the React Dashboard via JWT-secured API points.
@@ -77,9 +78,11 @@ Ensure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/
 ## Screenshots
 
 ### 1. Predictive Landing Page
-![Landing Page](./docs/screenshot1.png)
+<img width="1666" height="933" alt="image" src="https://github.com/user-attachments/assets/dc3b3e61-8410-4fa6-86cb-db72ce72b250" />
+
 
 ### 2. Secure MFA Authentication
-![MFA Security](./docs/screenshot2.png)
+<img width="1253" height="809" alt="image" src="https://github.com/user-attachments/assets/554c3ba9-1c92-4b59-9db7-a97a2234132d" />
+
 
 🚀 Built by Team Hardcoders
